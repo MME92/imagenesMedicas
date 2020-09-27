@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+    <html xmlns="http://www.w3.org/1999/xhtml" 
+    xmlns:th="http://www.thymeleaf.org" 
+	xmlns:sd="http://www.thymeleaf.org/spring-data"
+    xmlns:sec="http://www.thymeleaf.org/security"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+    <!-- Latest compiled and minified CSS -->
+	
+<!-- CSS only -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+  <link href="css/indice.css" type="text/css" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+
+ <!-- JS, Popper.js, and jQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+    
+  <head>
+    <title>Inicio</title>
+    
+  </head>
+  <body>
+    <div class="header">
+		<img src="image/Transparente-Blanco.png" alt="Italian Trulli">
+	</div>
+    <div class="wrapper">
+        <!-- Sidebar  -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <button type="button" id="sidebarCollapse" class="btn-info">
+                    <i class="fas fa-bars"></i>
+                    <span></span>
+                </button>
+            </div>
+
+            <ul class="list-unstyled components">
+                <li>
+                    <a href="/imagenesMedicas/">
+                        <i class="fas fa-home"></i>
+                        Búsqueda
+                    </a>
+                </li>              
+                <li>
+                    <a href="/imagenesMedicas/sobreLaWeb">
+                        <i class="fas fa-image"></i>
+                        Sobre la web
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="list-unstyled CTAs">
+                <li>
+                    <a href="https://www.dicomstandard.org/">
+                        <i class="fas fa-question"></i>
+                        Documentación DICOM
+                    </a>
+                </li>
+                <li>
+                    <a href="https://docs.cornerstonejs.org/">
+                        <i class="fas fa-question"></i>
+                        CornerStone
+                    </a>
+                </li>
+                <li>
+                    <a href="http://dcmjs.org/">
+                        <i class="fas fa-question"></i>
+                        DicomParser
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Page Content  -->
+        <div id="content main">
+		    <div class="container text-white">
+		        <div class="row ml-5" style="width: 600px;">
+		        <div class="filter">		        
+		    		<form>
+					    <fieldset>
+					    	<legend>Filtro de imágenes a mostrar</legend>					    
+								<div class="form-group">
+								    <input type="text" style="color: #708090;" id="personalId" name="search" placeholder="Id del paciente" >
+								    <input type="text" style="color: #708090;" name="search" placeholder="Numero de imágenes" id="numeroFotos">
+								</div>	
+								<button class="btn btn-info btnBuscar" type="button" id="buttonSearch" onclick="busquedaPacientes()">
+				                    <i class="fas fa-search"></i>
+				                    <span>Buscar</span>
+				                </button>
+					    </fieldset>
+					</form>
+				</div>					
+			    </div>		
+				<div id="seriesPacienteDiv">
+				    <div class="row"  style="margin-left:17%; margin-top:5%;" th:if="${seriesPaciente == null}">
+				       	<span> Esta búsqueda no tiene resultados asociados </span>
+				   	</div>
+				   	<div class="row tabla"  style="width: 700px;" th:if="${seriesPaciente != null}">
+				   	    <div th:fragment="fragmentListImagenes" th:unless="${#lists.isEmpty(seriesPaciente)}" id="results-block">	   	    			        		   	    		   	
+							<table class="table table-dark" id="imagenes" th:fragment="fragmentListImagenes">
+						   		<thead>
+								    <tr>
+								        <th scope="col" >Nombre del paciente</th>
+								        <th scope="col" >Id del paciente</th>
+							   	        <th scope="col" >Modalidad de la serie</th>
+							   	        <th scope="col" >Descripción de la serie</th>
+							   	        <th scope="col">Ver imagen</th>				   	        	   	      
+								    </tr>
+							    </thead>
+							    <tbody>
+								<tr th:each="serie : ${seriesPaciente}">
+								        <td scope="row" ><span th:text="${paciente.patientName}"> Nombre del paciente </span></td>
+								    	<td scope="row" ><span th:text="${paciente.personalId}"> Id del paciente </span> </td>
+								    	<td scope="row" ><span th:text="${serie.modality}"> Modalidad de la serie </span> </td>
+								    	<td scope="row" ><span th:text="${serie.descripcion}"> Descripción de la serie </span> </td>
+								    	<td scope="row"><form action="#" th:action="@{/view}" method="post">
+								    		<input type="hidden" name="url" th:value="${serie.url}"/>					    						    			    	
+									  		<button type="submit"><span id="url" class="fas fa-image">
+									  		</span></button></form>					  											  		
+								  		</td>
+								  	</tr>					  	
+							  	</tbody>
+							</table>
+							
+							<input id="pageNumbers" name="pageNumbers" type="hidden" value="$(pageNumbers)">
+							<div class="divPagination">
+								<ul class="pagination">
+								    <li th:if="${seriesPaciente.totalPages > 0}" 
+						    			th:each="pageNumber : ${pageNumbers}"><a href="#" th:attr="onclick=|listarPacientes('${seriesPaciente.totalPages}', '${pageNumber}')|">
+									    <span
+									        th:text=${pageNumber}
+									        th:class="${pageNumber==seriesPaciente.number + 1} ? active"></span>
+								    </a></li>
+							  </ul>							 
+							</div>
+						</div>
+					</div>
+				</div>	
+
+						    
+		    	<script type="text/javascript">	
+				function busquedaPacientes() {
+				    var url = '/imagenesMedicas/buscar';
+			
+				    if (($('#personalId').val() != '') && ($('#numeroFotos').val() != '')) {
+				        url = url + '/' + $('#personalId').val()+ '/' + $('#numeroFotos').val();
+				    }
+				    $('#seriesPacienteDiv').load(url);
+				}
+				
+				function listarPacientes(totalPage, pageNumber) {
+					console.log("Entro");
+				    var url = '/imagenesMedicas/buscar';
+			        url = url + '/' + $('#personalId').val() + '/' + $('#numeroFotos').val() + '/' + pageNumber + '/' + totalPage;
+				    $('#seriesPacienteDiv').load(url);
+				}
+				
+			    $('#sidebarCollapse').on('click', function () {
+			        $('#sidebar').toggleClass('active');
+			    });
+		
+		    </script>
+		   	</div>
+        </div>
+    </div>
+
+
+  </body>
+</html>

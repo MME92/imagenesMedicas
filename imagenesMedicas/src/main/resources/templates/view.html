@@ -1,0 +1,563 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <!-- twitter bootstrap CSS stylesheet - not required by cornerstone -->
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/vista.css" type="text/css" rel="stylesheet">
+
+    <style>
+        .overlay {
+            /* prevent text selection on overlay */
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+
+            /* ignore pointer event on overlay */
+            pointer-events: none;
+        }
+    </style>
+
+</head>
+<body>
+<div class="container">
+
+   <div class="informacion">
+	   <p th:text="${description}"> </p>
+	   <p th:text="${institucionName}"> </p>
+	   <p th:text="${patientName}" ></p>
+	   <p th:text="${birthDate}" ></p>
+	   <p th:text="${sex}" ></p>
+	   <span id="slice">Slice:</span> 
+   </div>              
+
+	<div class="col-xs-12">
+	    <div class="cDicom shadow-lg rounded center-block contenedor" id="dicomImage"
+	        style="overflow-x: hidden; overflow-y: scroll; -webkit-overflow-scrolling: touch; 
+	        width:512px;height:512px;"
+	        oncontextmenu="return false"
+	        onmousedown="return false">
+	    </div>
+    </div>
+    
+	<input id="url" type="hidden" th:value="${url}">    
+	<input id="base64" type="hidden" th:value="${base64}"> 
+	
+	
+	<input id="limit" type="hidden" th:value="${limit}"> 
+	<div th:fragment="fragmentImagenes">   
+		<input  id="base64SiguienteArray" type="hidden" th:value="${base64SiguienteArray}">   
+		<input  id="contadorSiguiente" type="hidden" th:value="${contadorSiguiente}"> 
+		<input  id="base643" type="hidden" th:value="${base643}"> 
+		<input  id="base642" type="hidden" th:value="${base642}">    	 
+	</div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12">
+                <div  class="text-center">
+				    <button id="CT Abdomen" class="btn">CT Abdomen</button>
+				    <button id="CT Angio" class="btn">CT Angio</button>
+				    <button id="CT Bone" class="btn">CT Bone</button>
+				    <button id="CT Brain" class="btn">CT Brain</button>
+				    <button id="CT Chest" class="btn">CT Chest</button>
+				    <button id="CT Lungs" class="btn">CT Lungs</button>
+				    <button id="invert" class="btn">Invert</button>
+				    
+				    <span id="window">WW/WC:</span>
+				    <div><span id="coords"></span></div>
+		    	</div>
+		    </div>
+	    </div>
+    </div>
+</div>
+
+<!-- cornerstone depends on jQuery so it must be loaded first-->
+<script src="js/jquery.min.js"></script>
+
+<!-- include the cornerstone library -->
+<script src="js/cornerstone.js"></script>
+
+<!-- <!-- include special code for these examples which provides images -->
+  <script src="js/dicomParser.js"></script>
+
+  <!-- include the hammer.js library for touch gestures-->
+  <script src="https://unpkg.com/hammerjs@2.0.8/hammer.js"></script>
+  <script src="https://unpkg.com/dicom-parser@1.8.3/dist/dicomParser.min.js"></script>
+
+  <!-- include the cornerstone library -->
+  <script src="js/cornerstoneTools.min.js"></script>
+  <script src="https://unpkg.com/cornerstone-math"></script>
+  <script src="https://unpkg.com/cornerstone-wado-image-loader"></script>
+  <script src="js/cornerstoneFileImageLoader.js"></script>
+  <!-- Why we're all here ;) -->
+  <script src="https://unpkg.com/cornerstone-tools@%5E4"></script>
+  <script src="js/jpx.min.js"></script>
+<!--   <script src="js/parsersDicom.js"></script> -->
+
+<script type="text/javascript">
+
+let contador = 1;
+let imagenesId = [];
+let arrayWidth = [];
+let arrayHeight = [];
+let cargando = 0;
+var myFunction = function() {
+    "use strict";
+
+ return (function (cs) {
+
+    // Study: Doe, Jane
+    //    CT: CT SlicesCT2
+    //   PET: PET NAC 2DPT2
+
+    let imagenesIdSiguientes = [];
+	let longitudMaximaActualAux;
+	let longitudMaximaActualAuxSiguientes;
+	if (contador == 1) {
+	    var ct230Base64 = $("#base64").val();
+	    var sin = ct230Base64.split('[');
+	    var sinSon = sin[1].split(']');
+		var parsedBase64Imagenes = sinSon[0].split(",");
+		addParsedBase64Imagenes(parsedBase64Imagenes);
+	}
+    var ct230Base642 = $("#base642").val();
+    if (ct230Base642 !== ""){
+		var sin2;
+	    var sinSon2;
+	    var parsedCompleto;
+		sin2 = ct230Base642.split('[');
+	    sinSon2 = sin2[1].split(']');
+	    var parsedBase64Siguiente = sinSon2[0].split(",");
+	    addParsedBase64Imagenes(parsedBase64Siguiente);
+    }
+    var ct230Base643 = $("#base643").val();
+    if (ct230Base643 !== ""){
+		var sin2;
+	    var sinSon2;
+	    var parsedCompleto;
+		sin2 = ct230Base643.split('[');
+	    sinSon2 = sin2[1].split(']');
+	    var parsedBase64Siguiente = sinSon2[0].split(",");
+	    addParsedBase64Imagenes(parsedBase64Siguiente);
+    }
+
+
+    //access like and array
+
+    function pixelData2str(buf) {
+        var bufView = new Uint16Array(buf);
+        var len = bufView.length;
+        var str = '';
+
+        for(var i = 0; i < len; i++) {
+            var word = bufView[i];
+            var lower = word & 0xFF;
+            var upper = (word >> 8) & 0xFF;
+            str += String.fromCharCode(lower) + String.fromCharCode(upper);
+        }
+
+        return str;
+    }
+
+    function encodePixelData(pixelData) {
+        var pixelDataAsString = pixelData2str(pixelData);
+        var base64str = window.btoa(pixelDataAsString);
+        return base64str;
+    }
+
+    function str2ab(str) {
+        var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
+        var bufView = new Uint16Array(buf);
+        var index = 0;
+        for (var i=0, strLen=str.length; i<strLen; i+=2) {
+            var lower = str.charCodeAt(i);
+            var upper = str.charCodeAt(i+1);
+            bufView[index] = (upper << 8) + lower;
+            index++;
+        }
+        return bufView;
+    }
+
+    function getPixelData(base64PixelData)
+    {
+        var pixelDataAsString = window.atob(base64PixelData);
+        var pixelData = str2ab(pixelDataAsString);
+        return pixelData;
+    }
+
+    function addParsedBase64Imagenes(parsedBase64Imagenes){
+	        parsedBase64Imagenes.forEach(function (elemento, indice, array) {
+	    	    var dataSet = dicomParser.parseDicom(Uint8Array.from(atob(elemento), c => c.charCodeAt(0)));
+	    	    // get the pixel data element (contains the offset and length of the data)
+	    	    var pixelDataElement = dataSet.elements.x7fe00010;
+	    	    // create a typed array on the pixel data (this example assumes 16 bit unsigned data)
+	    	    var pixelData = new Uint16Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length / 2);
+	    	    imagenesId.push(pixelData);
+        	    var heightU = dataSet.string('x00281050');
+        	    var widthU = dataSet.string('x00281051');
+        	    arrayWidth.push(parseInt(widthU));
+        	    arrayHeight.push(parseInt(heightU));
+	        });
+	        // create a typed array on the pixel data (this example assumes 16 bit unsigned data)
+    }
+    
+
+    function getCTImage(imageId) {
+
+        var width = 512;
+        var height = 512;
+    	var lastChar = imageId.substring(17,imageId.length)
+		var indiceString = "instanceNumber://" + lastChar;
+		var indice = parseInt(lastChar);
+
+		var numPixels = width * height;
+        var pixelData = new Uint16Array(numPixels);
+        var index = 0;
+        // clear image to black
+        for (var y = 0; y < height; y++) {
+            for (var x = 0; x < width; x++) {
+                pixelData[index] = 128;
+                index++;
+            }
+        }
+        
+        var left = 10;
+        var top = 20;
+        var squareWidth = 50;
+        var squareHeight = 100;
+
+        for (var row = top; row < top + squareHeight; row++) {
+            var rowOffset = row * width;
+            pixelData[rowOffset + left] = 255;
+            pixelData[rowOffset + left + squareWidth] = 255;
+        }
+        var topRowOffset = top * width;
+        var bottomRowOffset = (top + squareHeight) * width;
+        for (var column = left; column < left + squareWidth; column++) {
+            pixelData[topRowOffset + column] = 255;
+            pixelData[bottomRowOffset + column] = 255;
+        }
+        
+        function getPixelData()
+        {
+
+    		if ( $("#limit").val() == 1){
+            	var unit16Array =  imagenesId[0];
+            	return unit16Array;    			
+    		} else if(imageId === indiceString)
+            {	
+    			console.log(imageId, " indice ", indice);
+            	var unit16Array =  imagenesId[indice];
+            	return unit16Array;
+           	}
+        }
+        function getImageData() {
+            return imageData;
+        }
+        
+        var image = {               
+                imageId: imageId,
+                minPixelValue : 0,
+                maxPixelValue : 4096,
+                slope: 1.0,
+                intercept : -1024,
+                windowCenter : arrayHeight[indice] ? arrayHeight[indice] : 80,
+                windowWidth : arrayWidth[indice] ? arrayWidth[indice] : 400,
+                render: cornerstone.renderGrayscaleImage,
+                getPixelData: getPixelData,                
+                rows: 512,
+                columns: 512,
+                height: height,
+                width: width,
+                color: true,
+                columnPixelSpacing: 1,
+                rowPixelSpacing: 1,
+                sizeInBytes: width * height * 4
+        };
+
+        return {
+            promise: new Promise((resolve) => {
+              resolve(image);
+            }),
+            cancelFn: undefined
+        };
+    }
+
+
+    // register our imageLoader plugin with cornerstone
+    
+    cs.registerImageLoader('instanceNumber', getCTImage);
+}(cornerstone));
+ 
+ }
+	_initCornerstone();
+	myFunction();
+	var ct230Base64 = $("#base64").val();
+    
+    var urlInicial = $("#url").val();
+
+    // image enable the dicomImage element
+     const element = document.getElementById('dicomImage');
+     cornerstone.enable(element);
+     let imageIds = [];
+     let longitudMinimaActualAux;
+     let indiceActual;
+     let longitudMaximaActualAux;
+
+     function arrayMaquetado(indiceActual, string){
+	    cargando = 1;
+	    var sin = string.split('[');
+	    var sinSon = sin[1].split(']');
+	    var parsedBase64Imagenes = sinSon[0].split(",");
+	    var dataSet = dicomParser.parseDicom(Uint8Array.from(atob(parsedBase64Imagenes[parsedBase64Imagenes.length-1]), c => c.charCodeAt(0)));
+	    insNumber = dataSet.string('x00200013');
+	    longitudMaximaActualAux = parseInt(insNumber);
+		console.log("longitudMaximaActualAux", longitudMaximaActualAux);
+
+	    var dataSet = dicomParser.parseDicom(Uint8Array.from(atob(parsedBase64Imagenes[0]), c => c.charCodeAt(0)));
+	    // get the pixel data element (contains the offset and length of the data)
+	    var instanceNumber = dataSet.string('x00200013');
+	    if ($("#limit").val() <= 20){
+	    	longitudMaximaActualAux = $("#limit").val();
+	    } else {
+	    	longitudMinimaActualAux = parseInt(instanceNumber);
+	    }
+	    
+	     //access like and array
+	         if((contador % 2) != 0){
+	        	 if (contador == 1){    
+	     			console.log("longitudMaximaActualAux", longitudMaximaActualAux);
+				     for (i = 0; i <= longitudMaximaActualAux; i++) {
+				    	 var imageId = "instanceNumber://" + i;
+				    	 imageIds.push(imageId);
+				     }
+					 cargando = 0;
+			         contador = contador + 1;
+				     return;
+	        	 }
+	        	myFunction();           	
+			    for (i = longitudMinimaActualAux; i <= longitudMaximaActualAux; i++) {
+			    	 var imageId = "instanceNumber://" + i;
+			    	 imageIds.push(imageId);
+			     }
+				cargando = 0;
+			     return;
+	         } else {
+		         contador = contador + 1;
+	        	 myFunction();           	
+	             for (i = longitudMinimaActualAux; i <= longitudMaximaActualAux; i++) {
+			   	 	var imageId = "instanceNumber://" + i;
+			     	imageIds.push(imageId);
+			    }
+	     		cargando = 0;
+			    return;
+	         }
+     }
+     arrayMaquetado(0, ct230Base64);
+
+  // show image #1 initially
+     function updateTheImage(imageIndex, imageIds) {  	  	
+         const currentImageIndexAux = imageIndex;
+         document.getElementById('slice').textContent = "Slice:" + (currentImageIndexAux + 1) + '/' + $("#limit").val();
+         cornerstone.loadImage(imageIds[currentImageIndexAux]).then(function(image) {       	 
+           cornerstone.displayImage(element, image);
+           const viewport = cornerstone.getViewport(element);
+
+             document.getElementById('window').textContent = "WW/WC:" + Math.round(viewport.voi.windowWidth)
+                 + "/" + Math.round(viewport.voi.windowCenter);
+
+             // Add event handler for the ww/wc presets
+             document.getElementById('CT Abdomen').addEventListener('click', function() {
+                 let viewport = cornerstone.getViewport(element);
+                 viewport.voi.windowWidth = 400;
+                 viewport.voi.windowCenter = 60;
+                 cornerstone.setViewport(element, viewport);
+                 document.getElementById('window').textContent = "WW/WC:" + Math.round(viewport.voi.windowWidth)
+                     + "/" + Math.round(viewport.voi.windowCenter);
+             });
+
+             document.getElementById('CT Angio').addEventListener('click', function() {
+                 let viewport = cornerstone.getViewport(element);
+                 viewport.voi.windowWidth = 600;
+                 viewport.voi.windowCenter = 300;
+                 cornerstone.setViewport(element, viewport);
+                 document.getElementById('window').textContent = "WW/WC:" + Math.round(viewport.voi.windowWidth)
+                     + "/" + Math.round(viewport.voi.windowCenter);
+             });
+
+             document.getElementById('CT Bone').addEventListener('click', function() {
+                 let viewport = cornerstone.getViewport(element);
+                 viewport.voi.windowWidth = 1500;
+                 viewport.voi.windowCenter = 300;
+                 cornerstone.setViewport(element, viewport);
+                 document.getElementById('window').textContent = "WW/WC:" + Math.round(viewport.voi.windowWidth)
+                     + "/" + Math.round(viewport.voi.windowCenter);
+             });
+             
+            document.getElementById('CT Brain').addEventListener('click', function() {
+                let viewport = cornerstone.getViewport(element);
+                viewport.voi.windowWidth = 80;
+                viewport.voi.windowCenter = 40;
+                cornerstone.setViewport(element, viewport);
+                document.getElementById('window').textContent = "WW/WC:" + Math.round(viewport.voi.windowWidth)
+                    + "/" + Math.round(viewport.voi.windowCenter);
+             });
+
+            document.getElementById('CT Chest').addEventListener('click', function() {
+                let viewport = cornerstone.getViewport(element);
+                viewport.voi.windowWidth = 400;
+                viewport.voi.windowCenter = 40;
+                cornerstone.setViewport(element, viewport);
+                document.getElementById('window').textContent = "WW/WC:" + Math.round(viewport.voi.windowWidth)
+                    + "/" + Math.round(viewport.voi.windowCenter);
+             });
+            
+            document.getElementById('invert').addEventListener('click', function() {
+                let viewport = cornerstone.getViewport(element);
+                viewport.invert = !viewport.invert;
+                cornerstone.setViewport(element, viewport);
+             });     
+            
+            document.getElementById('invert').addEventListener('click', function() {
+                let viewport = cornerstone.getViewport(element);
+                viewport.voi.windowWidth = 1500;
+                viewport.voi.windowCenter = -400;
+                cornerstone.setViewport(element, viewport);
+                document.getElementById('window').textContent = "WW/WC:" + Math.round(viewport.voi.windowWidth)
+                    + "/" + Math.round(viewport.voi.windowCenter);
+             }); 
+            
+            element.addEventListener('mousemove', function(event) {
+                const pixelCoords = cornerstone.pageToPixel(element, event.pageX, event.pageY);
+                const pt = cornerstone.pixelToCanvas(element, pixelCoords);
+                document.getElementById('coords').textContent = "page=(" + event.pageX + ", " + event.pageY + "); pixel=(" + pixelCoords.x.toFixed(1) + ", " + pixelCoords.y.toFixed(1) + '); canvas=(' + pt.x.toFixed(1) + ', ' + pt.y.toFixed(1) + ')';
+            });
+
+            // add event handlers to pan image on mouse move
+            element.addEventListener('mousedown', function (e) {
+                let lastX = e.pageX;
+                let lastY = e.pageY;
+                const mouseButton = e.which;
+
+                function mouseMoveHandler(e) {
+                  const deltaX = e.pageX - lastX;
+                  const deltaY = e.pageY - lastY;
+                  lastX = e.pageX;
+                  lastY = e.pageY;
+
+                  if (mouseButton === 1) {
+                	console.log("entro 1");
+                    let viewport = cornerstone.getViewport(element);
+                    viewport.voi.windowWidth += (deltaX / viewport.scale);
+                    viewport.voi.windowCenter += (deltaY / viewport.scale);
+                    cornerstone.setViewport(element, viewport);
+                  } else if (mouseButton === 2) {
+                  	console.log("entro 2");
+                    let viewport = cornerstone.getViewport(element);
+                    viewport.translation.x += (deltaX / viewport.scale);
+                    viewport.translation.y += (deltaY / viewport.scale);
+                    cornerstone.setViewport(element, viewport);
+                  } else if (mouseButton === 3) {
+                  	console.log("entro 3");
+                    let viewport = cornerstone.getViewport(element);
+                    viewport.voi.windowWidth += 0.0000001;
+                    viewport.voi.windowCenter += 0.0000001;
+                    viewport.scale += (deltaY / 100);
+                    cornerstone.setViewport(element, viewport);
+                  }
+                }
+
+                 function mouseUpHandler() {
+                     document.removeEventListener('mousemove', mouseMoveHandler);
+                     document.removeEventListener('mouseup', mouseUpHandler);
+                 }
+
+                 document.addEventListener('mousemove', mouseMoveHandler);
+                 document.addEventListener('mouseup', mouseUpHandler);
+             });
+         });
+         return currentImageIndexAux;
+      }
+    var limit = $("#limit").val(); 
+  	var siguienteArrayString;
+    indiceActual = updateTheImage(0, imageIds);
+ 	var indiceActualAuxiliar;
+ 	
+
+ 	const wheelEvents = ['mousewheel', 'DOMMouseScroll', 'touchstart'];
+ 	wheelEvents.forEach((eventType, indiceActual) => {
+ 		element.addEventListener(eventType, function (e) {
+ 		 	
+ 			if ( limit > 500 ){
+	 			var resta = longitudMaximaActualAux - 50;
+			 	  	if (resta == indiceActual){
+			 	 		var url = "/imagenesMedicas/viewImageSiguientes" + '/' + longitudMaximaActualAux + '/' + urlInicial + '/' + contador;
+			 	 		$("#base64SiguienteArray").load(url);
+			 	 		stringArray = $("#base642").val();
+			 	 		setTimeout(
+			 	 			  () => {
+				 	 			if ((contador % 2) != 0) {	 
+			 	 					arrayMaquetado(indiceActual, $("#base643").val());
+				 	 			} else {
+				 	 				arrayMaquetado(indiceActual, $("#base642").val());
+			 	 			  	}
+			 	 			  },
+			 	 			  10 * 1000
+			 	 			);
+			 	  	}
+ 		 	} 
+	 	 // Firefox e.detail > 0 scroll back, < 0 scroll forward
+	 	 // chrome/safari e.wheelDelta < 0 scroll back, > 0 scroll forward
+	 	 if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+	 		 console.log(indiceActual, " =? ", limit);
+		 		console.log("cargando: ", cargando);
+		 		if ( (indiceActual < limit - 1) && cargando == 0 ){		 			
+	 	   	 	indiceActual++;  
+	 	   	 	indiceActualAuxiliar = updateTheImage(indiceActual, imageIds);
+		 		} 
+	 	 } else {
+		 	 if (e.wheelDelta < 0 || e.detail > 0) {
+		 		 console.log(indiceActual, " =? ", limit);
+		 		console.log("cargando: ", cargando);
+		 		if ( (indiceActual < limit - 1) && cargando == 0 ){		 			
+	 	   	 	indiceActual++;  
+	 	   	 	indiceActualAuxiliar = updateTheImage(indiceActual, imageIds);
+		 		}
+		 	 } else {
+		 		if (indiceActual > 0 && cargando == 0 ) {
+		 	     	indiceActual--;  
+		 	     	indiceActualAuxiliar = updateTheImage(indiceActual, imageIds);
+		 		}
+		 	 }
+	 	 }
+ 	 // Prevent page fom scrolling
+ 		});
+ 	});
+ 	indiceActual = indiceActualAuxiliar;
+ 	
+ 	function _initCornerstone() {
+ 	// Externals
+ 	cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
+ 	cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
+ 	cornerstoneTools.external.cornerstoneMath = cornerstoneMath;
+ 	cornerstoneTools.external.cornerstone = cornerstone;
+ 	cornerstoneTools.external.Hammer = Hammer;
+
+ 	// Image Loader
+ 	const config = {
+ 	webWorkerPath: `https://tools.cornerstonejs.org/examples/assets/image-loader/cornerstoneWADOImageLoaderWebWorker.js`,
+ 	taskConfiguration: {
+ 	  decodeTask: {
+ 	    codecsPath: `https://tools.cornerstonejs.org/examples/assets/image-loader/cornerstoneWADOImageLoaderCodecs.js`,
+ 	  },
+ 	},
+ 	};
+ 	cornerstoneWADOImageLoader.webWorkerManager.initialize(config);
+ 	}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" 
+    xmlns:th="http://www.thymeleaf.org" 
+	xmlns:sd="http://www.thymeleaf.org/spring-data"
+    xmlns:sec="http://www.thymeleaf.org/security"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+    <!-- Latest compiled and minified CSS -->
+	
+<!-- CSS only -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+  <link href="css/index.css" type="text/css" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+
+ <!-- JS, Popper.js, and jQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+  
+<head>
+<title>Page Title</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+<div class="header">
+	<img src="image/Transparente-Blanco.png" alt="Italian Trulli">
+</div>
+    <div class="wrapper">
+        <!-- Sidebar  -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <h3>Bootstrap Sidebar</h3>
+                <strong>BS</strong>
+                <button type="button" id="sidebarCollapse" class="btn-info">
+                    <i class="fas fa-bars"></i>
+                    <span></span>
+                </button>
+            </div>
+
+            <ul class="list-unstyled components">
+                <li>
+                    <a href="/imagenesMedicas/">
+                        <i class="fas fa-home"></i>
+                        Búsqueda
+                    </a>
+                </li>
+                <li>
+                    <a href="/imagenesMedicas/sobreLaWeb">
+                        <i class="fas fa-image"></i>
+                        Sobre la web
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="list-unstyled CTAs">
+                <li>
+                    <a href="https://www.dicomstandard.org/">
+                        <i class="fas fa-question"></i>
+                        Documentación DICOM
+                    </a>
+                </li>
+                <li>
+                    <a href="https://docs.cornerstonejs.org/">
+                        <i class="fas fa-question"></i>
+                        CornerStone
+                    </a>
+                </li>
+                <li>
+                    <a href="http://dcmjs.org/">
+                        <i class="fas fa-question"></i>
+                        DicomParser
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div id="content main">
+		    <div class="container text-white">
+		        <div class="row ml-5" style="width: 600px;">
+		        	<div class="filter">
+			  	    	<fieldset>		  					
+						    <h5>Carga de imagenes realizadas</h5>
+						</fieldset>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+        </div>
+    	<script type="text/javascript">	
+			function cargarDatos() {
+			    var url = '/imagenesMedicas/cargaDatos';
+				console.log(url);
+			    $('#inputCarga').load(url, function() {
+				    $("p").text($("#estado").val());	
+			    });;
+			}
+		    $('#sidebarCollapse').on('click', function () {
+		        $('#sidebar').toggleClass('active');
+		    });	
+       </script>
+
+</body>
+</html>

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.2.4.RELEASE</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.imagenesMedicas</groupId>
+	<artifactId>imagenesMedicas</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>war</packaging>
+	<name>imagenesMedicas</name>
+	<description>Demo project for Spring Boot</description>
+
+	<properties>
+		<java.version>1.8</java.version>
+	</properties>
+	<repositories>
+	 	<repository>
+		    <id>www.dcm4che.org</id>
+		    <name>dcm4che Repository</name>
+		    <url>http://www.dcm4che.org/maven2</url>
+		</repository>
+	</repositories>
+
+	<dependencies>	
+		<dependency>
+    		<groupId>mysql</groupId>
+    		<artifactId>mysql-connector-java</artifactId>
+    	</dependency>
+    	<dependency>
+             <groupId>org.thymeleaf</groupId>
+             <artifactId>thymeleaf</artifactId>
+         </dependency>
+         <dependency>
+            <groupId>org.thymeleaf</groupId>
+             <artifactId>thymeleaf-spring4</artifactId>
+            <version>3.0.0.RELEASE</version>
+        </dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-tomcat -->
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-tomcat</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.junit.vintage</groupId>
+					<artifactId>junit-vintage-engine</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+    		<groupId>commons-io</groupId>
+    		<artifactId>commons-io</artifactId>
+    		<version>2.6</version>
+		</dependency>
+	  <dependency>
+	    <groupId>org.dcm4che</groupId>
+	    <artifactId>dcm4che-imageio</artifactId>
+	    <version>3.3.7</version>
+	  </dependency>
+	  <dependency>
+	    <groupId>org.dcm4che</groupId>
+	    <artifactId>dcm4che-imageio-rle</artifactId>
+	    <version>3.3.7</version>
+	    <scope>runtime</scope>
+	  </dependency>
+	  <dependency>
+	    <groupId>com.sun.media</groupId>
+	    <artifactId>jai_imageio</artifactId>
+	    <version>1.2-pre-dr-b04</version>
+	    <scope>runtime</scope>
+	  </dependency>
+	  <dependency>
+	    <groupId>org.dcm4che.tool</groupId>
+	    <artifactId>dcm4che-tool-common</artifactId>
+	    <version>3.3.7</version>
+	    <scope>compile</scope>
+	  </dependency>
+	  <!-- https://mvnrepository.com/artifact/dcm4che.tool/dcm4che-tool-dcmmv -->
+		<dependency>
+		    <groupId>dcm4che.tool</groupId>
+		    <artifactId>dcm4che-tool-dcmmv</artifactId>
+		    <version>2.0.24</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/net.imagej/ij -->
+		<dependency>
+		    <groupId>net.imagej</groupId>
+		    <artifactId>ij</artifactId>
+		    <version>1.49c</version>
+		</dependency>
+
+
+	   <!-- https://mvnrepository.com/artifact/uk.gov.gchq.gaffer/bitmap-library -->
+		<dependency>
+		    <groupId>uk.gov.gchq.gaffer</groupId>
+		    <artifactId>bitmap-library</artifactId>
+		    <version>0.6.2</version>
+		</dependency>
+			  
+	  <dependency>
+	    <groupId>org.slf4j</groupId>
+	    <artifactId>slf4j-log4j12</artifactId>
+	  </dependency>
+		<!-- https://mvnrepository.com/artifact/org.java-websocket/Java-WebSocket -->
+		<dependency>
+		    <groupId>org.java-websocket</groupId>
+		    <artifactId>Java-WebSocket</artifactId>
+		    <version>1.3.0</version>
+		</dependency>		
+   	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

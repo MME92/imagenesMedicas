@@ -1,0 +1,29 @@
+body{
+    background: #000000;
+}
+
+p {
+  color: #708090;
+}
+
+span {
+  color: #708090;
+}
+
+.informacion{
+	margin-top: 20%;
+} 
+
+h5{
+	color:white;
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+}
+
+.cDicom{
+    box-shadow: 0 0 30px white;
+}
+
+button {
+	background: #708090;	
+	color:white;
+}
